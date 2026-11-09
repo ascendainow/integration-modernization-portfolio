@@ -53,6 +53,11 @@ pre{background:#0d1b3d;color:#d7e6ff;border-radius:8px;padding:12px;font-size:11
 footer{border-top:1px solid var(--line);margin-top:26px;padding:14px 0 30px;font-size:12px;color:var(--gun);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .empty{color:var(--gun);font-style:italic;font-size:12.5px}
 @media(max-width:900px){.steps{grid-template-columns:repeat(2,1fr)}.grid,.rules,.kpis{grid-template-columns:1fr 1fr}}
+.hint{margin:0 0 10px;padding:10px 14px;border-radius:10px;background:#fff4e5;border:1px solid #f5c48a;color:#7a3e00;font-weight:600;font-size:15px}
+.hint.done{background:#e8f5ec;border-color:#9fd3b0;color:#17663a}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(234,108,31,.6)}50%{box-shadow:0 0 0 10px rgba(234,108,31,0)}}
+#run.attn{animation:pulse 1.6s infinite}
+button:disabled{opacity:.7;cursor:progress}
 </style>
 </head>
 <body>
@@ -78,10 +83,11 @@ footer{border-top:1px solid var(--line);margin-top:26px;padding:14px 0 30px;font
     <div class="step" data-s="6"><span class="n">6</span><b>Log and validate</b>Run log and exceptions land where Power BI checks daily that source totals equal Business Central totals.</div>
   </div>
 
+  <p class="hint" id="hint">▶ Start here: click <b>Run nightly batch</b>. The flow runs step by step (about 3 seconds), then the results appear below.</p>
   <div class="controls">
     <label>Batch date <input type="date" id="bdate"></label>
     <label><input type="checkbox" id="inject"> Include 1 unmapped SKU (exception test)</label>
-    <button class="b1" id="run">Run nightly batch</button>
+    <button class="b1 attn" id="run">Run nightly batch</button>
     <button class="b2" id="rerun" disabled>Run the same day again</button>
     <button class="b3" id="reset">Reset demo</button>
   </div>
@@ -218,7 +224,11 @@ function renderVal(results){
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 async function run(isRerun){
   const date=$("bdate").value;if(!date)return;
-  $("run").disabled=true;$("rerun").disabled=true;
+  $("run").disabled=true;$("rerun").disabled=true;$("run").classList.remove("attn");
+  const runLabel=$("run").textContent, rerunLabel=$("rerun").textContent;
+  (isRerun?$("rerun"):$("run")).textContent="Running…";
+  $("hint").className="hint";$("hint").textContent="Running: watch the steps above light up. Results load below.";
+  document.querySelector(".kpis").scrollIntoView({behavior:"smooth",block:"start"});
   runCount++;$("log").dataset.fresh="0";
   const stamp=new Date().toISOString().slice(11,19);
   log(`[${stamp}] Run ${runCount} started for batch date ${date} as service identity svc-integration`);
@@ -245,13 +255,14 @@ async function run(isRerun){
   $("k2").textContent=(+$("k2").textContent)+created;$("k3").textContent=(+$("k3").textContent)+skipped;
   log(`[${new Date().toISOString().slice(11,19)}] Run ${runCount} finished: ${created} created, ${skipped} skipped, ${exN} exception line(s). Result written for Power BI validation.`);
   setStep(7);
-  $("run").disabled=false;$("rerun").disabled=false;
+  $("run").disabled=false;$("rerun").disabled=false;$("run").textContent=runLabel;$("rerun").textContent=rerunLabel;
+  $("hint").className="hint done";$("hint").textContent=skipped?`✓ Rerun complete: ${skipped} order(s) already existed, so nothing was posted twice.`:`✓ Run complete: ${created} Business Central order(s) created. Try "Run the same day again" to see the rerun safety check.`;
 }
 function reset(){posted={};runCount=0;current=null;["k1","k2","k3","k4"].forEach(k=>$(k).textContent="0");
   $("srcTabs").innerHTML="";$("payTabs").innerHTML="";$("srcTable").innerHTML='<p class="empty">Run the batch to read orders.</p>';
   $("payload").textContent="Run the batch to build the consolidated orders.";renderBC();
   $("val").innerHTML='<p class="empty">Validation appears after a run.</p>';$("exc").innerHTML='<p class="empty">No exceptions.</p>';
-  $("log").textContent="Waiting for the first run.";$("log").dataset.fresh="0";$("rerun").disabled=true;setStep(0);}
+  $("log").textContent="Waiting for the first run.";$("log").dataset.fresh="0";$("rerun").disabled=true;setStep(0);$("run").classList.add("attn");$("hint").className="hint";$("hint").innerHTML='▶ Start here: click <b>Run nightly batch</b>. The flow runs step by step (about 3 seconds), then the results appear below.';}
 const d=new Date();d.setDate(d.getDate()-1);$("bdate").value=d.toISOString().slice(0,10);
 $("run").onclick=()=>run(false);$("rerun").onclick=()=>run(true);$("reset").onclick=reset;
 })();
