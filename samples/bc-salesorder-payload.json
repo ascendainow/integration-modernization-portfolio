@@ -1,0 +1,28 @@
+{
+  "customerNumber": "C-SHOP-A",
+  "externalDocumentNumber": "STOREA-20261108",
+  "orderDate": "2026-11-08",
+  "salesOrderLines": [
+    {
+      "lineType": "Item",
+      "lineObjectNumber": "1001",
+      "description": "Organic Cotton Tee",
+      "quantity": 6,
+      "unitPrice": 28.0
+    },
+    {
+      "lineType": "Item",
+      "lineObjectNumber": "1006",
+      "description": "Rain Shell Jacket",
+      "quantity": 7,
+      "unitPrice": 118.0
+    },
+    {
+      "lineType": "Account",
+      "lineObjectNumber": "40450",
+      "description": "Shipping charges, daily total",
+      "quantity": 1,
+      "unitPrice": 22.5
+    }
+  ]
+}
