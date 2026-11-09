@@ -1,6 +1,6 @@
 # Architecture: Daily B2C Order Batching into Business Central
 
-This document describes the integration pattern shown in the [interactive demonstration](../demo/index.html).
+This document describes the integration pattern shown in the [interactive demonstration](https://ascendainow.github.io/integration-modernization-portfolio/demo/).
 
 ## Problem
 
@@ -62,5 +62,17 @@ flowchart LR
 ## Validation rule
 
 For each channel and day: **Shopify total = Business Central order total + held exception amount.** Any difference raises a mismatch on the Power BI report.
+
+## Enterprise standards applied in the rebuild
+
+- **Logic in the system that owns the data:** pricing, posting and validation stay in Business Central and Shopify; flows only move and orchestrate.
+- **No database between 2 enterprise systems:** flows call system APIs directly; Fabric holds analytics only, never an integration hop.
+- **Rerunnable:** every run checks for prior posting by source order ID before writing.
+- **Tied to no individual:** every connection runs under an organization-owned service principal or service account in Microsoft Entra ID; secrets live in the client's Azure Key Vault.
+- **Change control:** source control and named environments (development, test, production), with client approval before production.
+- **Least privilege:** read-only access during assessment; time-boxed elevation through Privileged Identity Management during the build; the client approves, audits and revokes every elevation.
+- **Audit trail:** all activity recorded in the client's Entra ID sign-in and audit logs and the Power Platform admin logs.
+- **Validation:** Power BI checks every sync daily and surfaces exceptions.
+- **Portable:** business rules documented and held in source systems, so orchestration can move platforms without rewriting logic.
 
 See [flow-logic.md](flow-logic.md) for step-by-step logic and [../samples/bc-salesorder-payload.json](../samples/bc-salesorder-payload.json) for the request body.
